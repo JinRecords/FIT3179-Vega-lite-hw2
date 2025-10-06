@@ -236,17 +236,37 @@
           "bind": {"input": "range", "min": 1, "max": 12, "step": 1, "name": "Month"}
         }
       ],
-      "mark": "bar",
-      "encoding": {
-        "x": {"field": "StateName", "type": "nominal", "title": "State", "sort": null, "axis": {"labelAngle": -45}},
-        "y": {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
-        "color": {"value": "#4c98c7"},
-        "tooltip": [
-          {"field": "StateName", "type": "nominal", "title": "State"},
-          {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
-          {"field": "Month", "type": "nominal"}
-        ]
-      }
+      "layer": [
+        {
+          "mark": "bar",
+          "encoding": {
+            "x": {"field": "StateName", "type": "nominal", "title": "State", "sort": null, "axis": {"labelAngle": -45}},
+            "y": {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
+            "color": {"value": "#4c98c7"},
+            "tooltip": [
+              {"field": "StateName", "type": "nominal", "title": "State"},
+              {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
+              {"field": "Month", "type": "nominal"}
+            ]
+          }
+        },
+        {
+          "transform": [
+            {"filter": "datum.StateName === 'Sarawak'"}
+          ],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "middle",
+            "dy": -15,
+            "text": "Dominated by RainForst"
+          },
+          "encoding": {
+            "x": {"field": "StateName", "type": "nominal"},
+            "y": {"field": "Rainfall", "type": "quantitative"}
+          }
+        }
+      ]
     };
 
     vegaEmbed("#vis_bar", spec_barchart, {actions: false});
