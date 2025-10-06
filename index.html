@@ -15,6 +15,12 @@
       text-align: center;
       font-size: small;
     }
+    .vega-bindings {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: serif;
+    }
   </style>
 </head>
 <body>
@@ -176,9 +182,15 @@
     // Bar chart visualization
     const spec_barchart = {
       "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "title": "Malaysia Rainfall in 2010",
+      "title": {
+                "text": "Monthly Rainfall in Malaysia (2010)",
+                "font": "serif",
+                "fontSize": 30,
+                "anchor": "middle",
+                "frame": "bounds"
+              },
       "width": 800,
-      "height": 400,
+      "height": 500,
       "data": {
         "url": "MalaysiaFloodDataset_MalaysiaFloodDataset_months.csv"
       },
