@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Malaysia Rainfall Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5.22.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.20.8"></script>
+  <style>
+    .vis-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .source {
+      text-align: center;
+      font-size: small;
+    }
+  </style>
+</head>
+<body>
+  <div class="vis-container">
+    <div id="vis_map"></div>
+  </div>
+  <div class="vis-container">
+    <div id="vis_bar"></div>
+  </div>
+  <div class="source">
+    Source: <a href="https://www.kaggle.com/datasets/rajatjurel/malaysia-flood-dataset2000-2010/data">https://www.kaggle.com/datasets/rajatjurel/malaysia-flood-dataset2000-2010/data</a>
+  </div>
+  <script type="text/javascript">
+    // Map visualization from index.html
+    const stateNameMapping = {
+        "101": "Johor",
+        "102": "Kedah",
+        "103": "Kelantan",
+        "104": "Melaka",
+        "105": "Negeri Sembilan",
+        "106": "Pahang",
+        "107": "Pulau Pinang",
+        "108": "Perak",
+        "109": "Perlis",
+        "110": "Selangor",
+        "111": "Terengganu",
+        "112": "Sabah",
+        "113": "Sarawak",
+        "114": "Kuala Lumpur",
+        "115": "Labuan"
+    };
+
+    fetch("https://jinrecords.github.io/FIT3179-Vega-lite-hw/MalaysiaFloodDataset_MalaysiaFloodDataset.csv")
+        .then(response => response.text())
+        .then(text => {
+            const data = text.split('
+').slice(1).map(row => {
+                const [state, annual_rainfall, flood] = row.split(',');
+                return {
+                    state_name: stateNameMapping[state],
+                    annual_rainfall: parseFloat(annual_rainfall),
+                    flood: flood
+                };
+            }).filter(d => d.state_name);
+
+            const spec_map = {
+              "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+              "title": {
+                "text": "Annual Rainfall in Malaysia (2010)",
+                "font": "serif",
+                "fontSize": 30,
+                "anchor": "middle",
+                "frame": "bounds"
+              },
+              "width": 800,
+              "height": 500,
+              "background": "#e6f7ff",
+              "projection": {
+                "type": "mercator",
+                "scale": 2000,
+                "center": [109, 4.5]
+              },
+              "layer": [
+                  {
+                      "data": {
+                          "url": "https://jinrecords.github.io/FIT3179-Vega-lite-hw/countries-10m.json",
+                          "format": {"type": "topojson", "feature": "countries"}
+                      },
+                      "transform": [
+                          {
+                              "filter": {
+                                  "field": "properties.name",
+                                  "oneOf": ["Singapore", "Laos", "Thailand", "Cambodia", "Indonesia", "Philippines", "Brunei Darussalam", "Myanmar"]
+                              }
+                          }
+                      ],
+                      "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "black"}
+                  },
+                  {
+                      "data": {
+                          "url": "https://jinrecords.github.io/FIT3179-Vega-lite-hw/ne_10m_admin_1_states_provinces.json",
+                          "format": {"type": "topojson", "feature": "ne_10m_admin_1_states_provinces"}
+                      },
+                      "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "white"}
+                  },
+                  {
+                      "data": {
+                          "url": "https://jinrecords.github.io/FIT3179-Vega-lite-hw/ne_10m_admin_1_states_provinces.json",
+                          "format": {"type": "topojson", "feature": "ne_10m_admin_1_states_provinces"}
+                      },
+                      "transform": [
+                          {
+                              "lookup": "properties.name",
+                              "from": {
+                                  "data": {"values": data},
+                                  "key": "state_name",
+                                  "fields": ["annual_rainfall", "flood"]
+                              }
+                          },
+                          {"filter": "datum.annual_rainfall !== null"}
+                      ],
+                      "mark": {"type": "geoshape", "stroke": "black"},
+                      "encoding": {
+                          "color": {
+                              "field": "annual_rainfall",
+                              "type": "quantitative",
+                              "scale": {"scheme": "blues", "reverse": false},
+                              "legend": {"title": "Annual Rainfall (mm)"}
+                          },
+                          "tooltip": [
+                              {"field": "properties.name", "type": "nominal", "title": "State"},
+                              {
+                                  "field": "annual_rainfall",
+                                  "type": "quantitative",
+                                  "title": "Annual Rainfall (mm)",
+                                  "format": ".2f"
+                              },
+                              {"field": "flood", "type": "nominal", "title": "Flood"}
+                          ]
+                      }
+                  },
+                  {
+                      "data": {
+                          "url": "https://jinrecords.github.io/FIT3179-Vega-lite-hw/ne_10m_admin_1_states_provinces.json",
+                          "format": {"type": "topojson", "feature": "ne_10m_admin_1_states_provinces"}
+                      },
+                      "transform": [
+                          {
+                              "lookup": "properties.name",
+                              "from": {
+                                  "data": {"values": data},
+                                  "key": "state_name",
+                                  "fields": ["annual_rainfall"]
+                              }
+                          },
+                          {"filter": "datum.annual_rainfall === null"},
+                          {"calculate": "'No data'", "as": "no_data_tooltip"}
+                      ],
+                      "mark": {"type": "geoshape", "fill": "transparent"},
+                      "encoding": {
+                          "tooltip": [
+                              {"field": "properties.name", "type": "nominal", "title": "State"},
+                              {"field": "no_data_tooltip", "type": "nominal", "title": "Annual Rainfall"},
+                              {"field": "no_data_tooltip", "type": "nominal", "title": "Flood"}
+                          ]
+                      }
+                  },
+                  {
+                      "data": {
+                          "url": "https://jinrecords.github.io/FIT3179-Vega-lite-hw/ne_110m_graticules_1.json",
+                          "format": {"type": "topojson", "feature": "ne_110m_graticules_1"}
+                      },
+                      "mark": {"type": "geoshape", "fill": "none", "stroke": "#E0E0E0", "strokeOpacity": 0.5}
+                  }
+              ]
+            };
+            vegaEmbed("#vis_map", spec_map, {actions: false});
+        });
+
+    // Bar chart visualization
+    const spec_barchart = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "title": "Malaysia Rainfall in 2010",
+      "width": 800,
+      "height": 400,
+      "data": {
+        "url": "MalaysiaFloodDataset_MalaysiaFloodDataset_months.csv"
+      },
+      "transform": [
+        {
+          "fold": ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
+          "as": ["Month", "Rainfall"]
+        },
+        {
+          "calculate": "({'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6, 'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12})[datum.Month]",
+          "as": "MonthNumber"
+        },
+        {
+            "lookup": "STATE",
+            "from": {
+                "data": {
+                    "values": [
+                        {"STATE": 101, "StateName": "Johor"},
+                        {"STATE": 102, "StateName": "Kedah"},
+                        {"STATE": 103, "StateName": "Kelantan"},
+                        {"STATE": 104, "StateName": "Melaka"},
+                        {"STATE": 105, "StateName": "Negeri Sembilan"},
+                        {"STATE": 106, "StateName": "Pahang"},
+                        {"STATE": 108, "StateName": "Perak"},
+                        {"STATE": 109, "StateName": "Perlis"},
+                        {"STATE": 111, "StateName": "Terengganu"},
+                        {"STATE": 112, "StateName": "Sabah"},
+                        {"STATE": 113, "StateName": "Sarawak"}
+                    ]
+                },
+                "key": "STATE",
+                "fields": ["StateName"]
+            }
+        },
+        {
+          "filter": "datum.MonthNumber == month_selection"
+        }
+      ],
+      "params": [
+        {
+          "name": "month_selection",
+          "value": 1,
+          "bind": {"input": "range", "min": 1, "max": 12, "step": 1, "name": "Month"}
+        }
+      ],
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "StateName", "type": "nominal", "title": "State", "sort": null, "axis": {"labelAngle": -45}},
+        "y": {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
+        "color": {"value": "darkblue"},
+        "tooltip": [
+          {"field": "StateName", "type": "nominal", "title": "State"},
+          {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
+          {"field": "Month", "type": "nominal"}
+        ]
+      }
+    };
+
+    vegaEmbed("#vis_bar", spec_barchart, {actions: false});
+  </script>
+</body>
+</html>
