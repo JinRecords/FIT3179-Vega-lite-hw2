@@ -50,7 +50,7 @@
     fetch("https://jinrecords.github.io/FIT3179-Vega-lite-hw2/MalaysiaFloodDataset_MalaysiaFloodDataset.csv")
         .then(response => response.text())
         .then(text => {
-            const data = text.split('').slice(1).map(row => {
+            const data = text.split('\n').slice(1).map(row => {
                 const [state, annual_rainfall, flood] = row.split(',');
                 return {
                     state_name: stateNameMapping[state],
@@ -228,7 +228,7 @@
       "encoding": {
         "x": {"field": "StateName", "type": "nominal", "title": "State", "sort": null, "axis": {"labelAngle": -45}},
         "y": {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
-        "color": {"value": "darkblue"},
+        "color": {"value": "4c98c7"},
         "tooltip": [
           {"field": "StateName", "type": "nominal", "title": "State"},
           {"field": "Rainfall", "type": "quantitative", "title": "Rainfall (mm)"},
